@@ -26,7 +26,7 @@
       "artist": "James Lord Pierpont",
       "category": "Joulu",
       "aliases": "Kulkuset, Kilisee kilisee kulkunen",
-      "audio": "audio/jingle-bells.mp3",
+      "audio": "audio/jingle-bells.opus",
       "era": "classic",
       "level": 1
     },
@@ -36,7 +36,7 @@
       "artist": "Perinteinen",
       "category": "Kansanlaulu",
       "aliases": "Tuiki tuiki tähtönen, Ah vous dirai-je maman, ABC Song",
-      "audio": "audio/twinkle.mp3",
+      "audio": "audio/twinkle.ogg",
       "era": "classic",
       "level": 1
     },
@@ -56,7 +56,7 @@
       "artist": "Perinteinen",
       "category": "Kansanlaulu",
       "aliases": "Jaakko kulta, Brother John, Are You Sleeping",
-      "audio": "audio/frere-jacques.mp3",
+      "audio": "audio/frere-jacques.ogg",
       "era": "classic",
       "level": 5
     }

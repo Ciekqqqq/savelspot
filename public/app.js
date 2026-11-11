@@ -411,7 +411,7 @@ function lockForm(form, locked) {
 }
 
 function validAudioPath(value) {
-  if (/^audio\/[\w.-]+\.(mp3|wav|ogg|m4a)$/i.test(value)) return true;
+  if (/^audio\/[\w.-]+\.(mp3|wav|ogg|opus|m4a)$/i.test(value)) return true;
   try { return new URL(value).protocol === 'https:'; }
   catch { return false; }
 }

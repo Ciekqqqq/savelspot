@@ -23,9 +23,9 @@ Avaa selaimessa [http://127.0.0.1:3000](http://127.0.0.1:3000). JSON Server tarj
 
 Valikossa voi säätää äänenvoimakkuutta, valita käytettävät pätkien pituudet, poistaa nimiehdotukset, piilottaa kohdevalon ja vaihtaa teemaa. Vähintään yksi pätkän pituus jää aina käyttöön. Oletusteema seuraa laitteen asetusta. Asetukset säilyvät tässä selaimessa.
 
-Mukana on kuusi vapaasti jaettavaa esimerkkikappaletta. Kokoelma ei ole Songspotin musiikkikirjasto. Vaikeustaso on kappale-editorissa määritettävä arvio 1–5, ei kuuntelumääriin perustuva luokitus. Kaikki esimerkit kuuluvat Ennen 2000 -aikakauteen; muille aikakausille voi lisätä omia kappaleita. Tyhjästä suodatustuloksesta näytetään ilmoitus.
+Mukana on kuusi oikeaa musiikkitallennetta: Beethovenia, Mozartia ja tuttuja perinnesävelmiä oikeina soittoesityksinä. Tallenteiden tekijät ja lisenssit on merkitty [äänitteiden lähdeluetteloon](AUDIO_CREDITS.md). Kappaleiden tekijänoikeusvapaus ei yksin tee mistä tahansa niitä esittävästä äänityksestä vapaata; käytä vain omia tai luvallisia äänitiedostoja. Esimerkkikokoelma ei sisällä kaupallisten suoratoistopalvelujen pop-hittejä. Vaikeustaso on kappale-editorissa määritettävä arvio 1–5, ei kuuntelumääriin perustuva luokitus. Kaikki esimerkit kuuluvat Ennen 2000 -aikakauteen; muille aikakausille voi lisätä omia kappaleita. Tyhjästä suodatustuloksesta näytetään ilmoitus.
 
-Kappaleeditorin äänikenttään käy tiedosto kansiosta `public/audio/`, esimerkiksi `audio/fur-elise.mp3`, tai selaimesta haettavissa oleva suora HTTPS-osoite äänitiedostoon. Ulkoisen palvelimen on sallittava haku toiselta sivustolta (CORS). Voit antaa samalle kappaleelle useita hyväksyttäviä nimiä.
+Kappaleeditorin äänikenttään käy MP3-, OGG- tai Opus-tiedosto kansiosta `public/audio/`, esimerkiksi `audio/fur-elise.mp3`, tai selaimesta haettavissa oleva suora HTTPS-osoite äänitiedostoon. Ulkoisen palvelimen on sallittava haku toiselta sivustolta (CORS). Voit antaa samalle kappaleelle useita hyväksyttäviä nimiä.
 
 ## Toteutus ja katselmointi
 
