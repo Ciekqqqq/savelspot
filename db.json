@@ -1,0 +1,58 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "category": "Rock",
+      "clue": "Queenin kappale vaihtaa balladista oopperaan ja sitten raskaaseen rockiin.",
+      "hint": "Kappaleen nimi päättyy sanaan Rhapsody.",
+      "answer": "Bohemian Rhapsody",
+      "wrong1": "Radio Ga Ga",
+      "wrong2": "Don't Stop Me Now"
+    },
+    {
+      "id": 2,
+      "category": "Elektroninen",
+      "clue": "Tämä Daruden instrumentaali tunnetaan nopeasta syntikkamelodiastaan.",
+      "hint": "Nimi tarkoittaa hiekkamyrskyä.",
+      "answer": "Sandstorm",
+      "wrong1": "Feel the Beat",
+      "wrong2": "Children"
+    },
+    {
+      "id": 3,
+      "category": "Pop",
+      "clue": "The Weekndin hitissä kuuluu 1980-luvun tyylistä syntikkapoppia.",
+      "hint": "Kappaleen nimi viittaa häikäiseviin valoihin.",
+      "answer": "Blinding Lights",
+      "wrong1": "Save Your Tears",
+      "wrong2": "Starboy"
+    },
+    {
+      "id": 4,
+      "category": "Rock",
+      "clue": "Nirvanan musiikkivideolla bändi soittaa koulun liikuntasalissa.",
+      "hint": "Kappaleen nimessä on sana Teen.",
+      "answer": "Smells Like Teen Spirit",
+      "wrong1": "Come As You Are",
+      "wrong2": "In Bloom"
+    },
+    {
+      "id": 5,
+      "category": "Euroviisut",
+      "clue": "Käärijä esiintyi vuoden 2023 Euroviisuissa vihreissä hihoissa.",
+      "hint": "Kappaleen nimessä toistuu sama tavu kolme kertaa.",
+      "answer": "Cha Cha Cha",
+      "wrong1": "Huhhahhei",
+      "wrong2": "Ruoska"
+    },
+    {
+      "id": 6,
+      "category": "Pop",
+      "clue": "Daft Punkin hitissä Pharrell Williams laulaa ja Nile Rodgers soittaa kitaraa.",
+      "hint": "Kappaleen nimi viittaa onnenpotkuun.",
+      "answer": "Get Lucky",
+      "wrong1": "Lose Yourself to Dance",
+      "wrong2": "Instant Crush"
+    }
+  ]
+}
