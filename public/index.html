@@ -30,6 +30,13 @@
     <label class="switch-row">Näytä nimiehdotukset <input id="easy-search" type="checkbox" checked></label>
     <label class="switch-row">Näytä kohdevalo <input id="spotlight" type="checkbox" checked></label>
     <label>Teema<select id="theme"><option value="system">Laitteen asetus</option><option value="dark">Tumma</option><option value="light">Vaalea</option></select></label>
+    <details class="catalog-connect"><summary>Suuri musiikkikatalogi</summary>
+      <p class="muted small">Jamendon katalogissa on noin puoli miljoonaa artistien julkaisemaa kappaletta monista tyylilajeista. Tämä on indie-musiikkia, ei listahittejä. Kappaleet soivat suorana Jamendosta.</p>
+      <form id="jamendo-form"><label>Jamendo-sovelluksen Client ID<input id="jamendo-id" name="clientId" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Syötä oma Client ID"></label><button class="primary" type="submit">Yhdistä katalogiin</button></form>
+      <p class="small"><a href="https://devportal.jamendo.com/" target="_blank" rel="noreferrer">Luo ilmainen kehittäjätili ↗</a></p>
+      <p id="jamendo-status" class="small" role="status" aria-live="polite">Client ID tallennetaan vain tähän selaimeen. Älä lisää sitä GitHubiin.</p>
+      <button id="use-local" class="text-button" type="button">Käytä kuutta paikallista esimerkkibiisiä</button>
+    </details>
     <p class="muted small">Asetukset ja tulokset säilyvät tässä selaimessa.</p>
   </aside>
   <main>
@@ -44,6 +51,7 @@
         </div>
         <label class="era-label"><span class="sr-only">Aikakausi</span><select id="era"><option value="all">Kaikki aikakaudet</option><option value="classic">Ennen 2000</option><option value="2000">2000-luku</option><option value="2010">2010-luku</option><option value="2020">2020-luku</option></select></label>
       </div>
+      <p id="catalog-note" class="catalog-note" hidden></p>
       <div id="difficulty" class="difficulty" role="group" aria-label="Vaikeustaso">
         <button type="button" data-level="1" aria-pressed="true">Helppo</button><button type="button" data-level="2" aria-pressed="false">Keski</button><button type="button" data-level="3" aria-pressed="false">Vaikea</button><button type="button" data-level="4" aria-pressed="false">Ekspertti</button><button type="button" data-level="5" aria-pressed="false">Mahdoton</button>
       </div>
@@ -62,7 +70,7 @@
       <p id="feedback" role="status" aria-live="polite">Ladataan kappaleita…</p>
       <ol id="guesses" class="guesses" aria-label="Aiemmat arvaukset"></ol>
       <div id="reveal" class="reveal" hidden>
-        <div class="answer-art" aria-hidden="true">♫</div><div class="answer-copy"><span class="eyebrow">SE OLI</span><h2 id="answer-title"></h2><p id="answer-artist"></p></div>
+        <div class="answer-art" aria-hidden="true">♫</div><div class="answer-copy"><span class="eyebrow">SE OLI</span><h2 id="answer-title"></h2><p id="answer-artist"></p><p id="track-credit" class="track-credit" hidden></p></div>
         <div class="reveal-actions"><button id="next-song" class="primary" type="button">Seuraava biisi →</button><button id="share" type="button">Kopioi tulos</button></div>
       </div>
       <p class="game-hint">Yksi biisi. Viisi mahdollisuutta. <span>Tunnistatko jo ensimmäisestä?</span></p>
@@ -88,7 +96,7 @@
   </nav>
   <footer>
     <span class="footer-label">PIENI PÄTKÄ. ISO OIVALLUS.</span>
-    <details id="instructions"><summary>Näin pelaat</summary><div class="instructions-grid"><article><span>01</span><h2>Kuuntele</h2><p>Paina toistoa. Aloitat 0,1 sekunnista ja voit kuunnella saman pätkän uudelleen.</p></article><article><span>02</span><h2>Tunnista</h2><p>Kirjoita kappaleen nimi ja paina Arvaa. Myös kokoelmaan lisätyt nimivaihtoehdot hyväksytään.</p></article><article><span>03</span><h2>Kokeile uudelleen</h2><p>Väärä vastaus tai ohitus avaa 0,5, 2, 8 ja lopuksi 15 sekuntia. Paljastuksen jälkeen voit soittaa 15 sekuntia.</p></article></div><p>Tyylilaji, aikakausi ja vaikeustaso valitsevat kappalejoukon. Vaikeustaso on kokoelman tekijän arvio (1–5). Valikosta voit valita pätkien pituudet ja poistaa nimiehdotukset.</p><p>Mukana on kuusi esimerkkikappaletta. Lisää uusia Omat biisit -näkymässä.</p></details>
+    <details id="instructions"><summary>Näin pelaat</summary><div class="instructions-grid"><article><span>01</span><h2>Kuuntele</h2><p>Paina toistoa. Aloitat 0,1 sekunnista ja voit kuunnella saman pätkän uudelleen.</p></article><article><span>02</span><h2>Tunnista</h2><p>Kirjoita kappaleen nimi ja paina Arvaa. Myös kokoelmaan lisätyt nimivaihtoehdot hyväksytään.</p></article><article><span>03</span><h2>Kokeile uudelleen</h2><p>Väärä vastaus tai ohitus avaa 0,5, 2, 8 ja lopuksi 15 sekuntia. Paljastuksen jälkeen voit soittaa 15 sekuntia.</p></article></div><p>Tyylilaji, aikakausi ja vaikeustaso valitsevat kappalejoukon. Vaikeustaso on oman kokoelman arvio (1–5). Laajassa katalogissa on useita tyylilajeja; musiikki haetaan tarpeen mukaan enintään 200 kappaleen erissä ja soitetaan Jamendosta.</p><p>Mukana on kuusi esimerkkikappaletta. Laaja katalogi yhdistetään valikosta omalla Jamendo Client ID:llä. Lisää omia biisejä Omat biisit -näkymässä.</p></details>
     <p class="credits">Sävelspot <span>·</span> musiikkia muistista <span>·</span> <a href="https://github.com/Ciekqqqq/savelspot" target="_blank" rel="noreferrer">GitHub ↗</a></p>
   </footer>
   <dialog id="editor" aria-labelledby="editor-heading"><form id="question-form">

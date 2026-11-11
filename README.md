@@ -23,13 +23,25 @@ Avaa selaimessa [http://127.0.0.1:3000](http://127.0.0.1:3000). JSON Server tarj
 
 Valikossa voi säätää äänenvoimakkuutta, valita käytettävät pätkien pituudet, poistaa nimiehdotukset, piilottaa kohdevalon ja vaihtaa teemaa. Vähintään yksi pätkän pituus jää aina käyttöön. Oletusteema seuraa laitteen asetusta. Asetukset säilyvät tässä selaimessa.
 
-Mukana on kuusi oikeaa musiikkitallennetta: Beethovenia, Mozartia ja tuttuja perinnesävelmiä oikeina soittoesityksinä. Tallenteiden tekijät ja lisenssit on merkitty [äänitteiden lähdeluetteloon](AUDIO_CREDITS.md). Kappaleiden tekijänoikeusvapaus ei yksin tee mistä tahansa niitä esittävästä äänityksestä vapaata; käytä vain omia tai luvallisia äänitiedostoja. Esimerkkikokoelma ei sisällä kaupallisten suoratoistopalvelujen pop-hittejä. Vaikeustaso on kappale-editorissa määritettävä arvio 1–5, ei kuuntelumääriin perustuva luokitus. Kaikki esimerkit kuuluvat Ennen 2000 -aikakauteen; muille aikakausille voi lisätä omia kappaleita. Tyhjästä suodatustuloksesta näytetään ilmoitus.
+Mukana on kuusi oikeaa musiikkitallennetta: Beethovenia, Mozartia ja tuttuja perinnesävelmiä oikeina soittoesityksinä. Tallenteiden tekijät ja lisenssit on merkitty [äänitteiden lähdeluetteloon](AUDIO_CREDITS.md). Kappaleiden tekijänoikeusvapaus ei yksin tee mistä tahansa niitä esittävästä äänityksestä vapaata; käytä vain omia tai luvallisia äänitiedostoja. Nämä esimerkit eivät sisällä kaupallisten suoratoistopalvelujen pop-hittejä. Vaikeustaso on kappale-editorissa määritettävä arvio 1–5, ei kuuntelumääriin perustuva luokitus. Kaikki esimerkit kuuluvat Ennen 2000 -aikakauteen; muille aikakausille voi lisätä omia kappaleita. Tyhjästä suodatustuloksesta näytetään ilmoitus.
 
-Kappaleeditorin äänikenttään käy MP3-, OGG- tai Opus-tiedosto kansiosta `public/audio/`, esimerkiksi `audio/fur-elise.mp3`, tai selaimesta haettavissa oleva suora HTTPS-osoite äänitiedostoon. Ulkoisen palvelimen on sallittava haku toiselta sivustolta (CORS). Voit antaa samalle kappaleelle useita hyväksyttäviä nimiä.
+## Suuri musiikkikatalogi
+
+Peli voi käyttää myös Jamendon noin puolen miljoonan kappaleen Creative Commons -katalogia. Se kattaa esimerkiksi popin, rockin, elektronisen musiikin, jazzin, klassisen, hip-hopin, metallin ja maailmanmusiikin. Katalogi on pääosin indie-musiikkia, ei kaupallisten listojen hittejä. Pelissä käytetään tyylilajihaun 200 kappaleen sivuja, ja ääni toistetaan suoraan Jamendosta. Kappaleet, joiden lisenssi kieltää muunnelmat, jätetään pois, koska peli käyttää lyhyitä äänipätkiä.
+
+Yhdistäminen vaatii oman Jamendo-kehittäjätilin ja sovelluksen Client ID:n:
+
+1. Rekisteröi sovellus [Jamendon kehittäjäportaalissa](https://devportal.jamendo.com/). Valitse lukuoikeudet ja lisää sovelluksen kuvaukseen julkaistun pelin linkki.
+2. Avaa pelin valikko → **Suuri musiikkikatalogi**. Syötä Client ID ja yhdistä.
+3. Client ID ja valinta säilyvät vain kyseisessä selaimessa. Älä lisää tunnistetta GitHubiin tai lähetä sitä muille. Jamendon `client_secret`-arvoa ei tarvita.
+
+Jamendon ehdot sallivat API:n käytön ilman kaupallista hyötyä. Pelin tulee näyttää artistin nimi sekä linkit kappaleeseen ja sen Creative Commons -lisenssiin; ne näytetään vastauksen yhteydessä. Ehdot myös kieltävät sovelluksen suunnittelun musiikin tallentamiseen tai offline-kuunteluun. Katalogi toimii vain, jos Jamendon API on käytettävissä ja selaimessa on toimiva Client ID. Ilman sitä peli käyttää kuutta mukana tulevaa kappaletta. [API-ohje](https://developer.jamendo.com/v3.0/tracks) · [API-käyttöehdot](https://devportal.jamendo.com/api_terms_of_use)
+
+Kappaleeditorin äänikenttään käy MP3-, OGG- tai Opus-tiedosto kansiosta `public/audio/`, esimerkiksi `audio/fur-elise.mp3`, tai selaimessa toistettavissa oleva suora HTTPS-osoite äänitiedostoon. Voit antaa samalle kappaleelle useita hyväksyttäviä nimiä.
 
 ## Toteutus ja katselmointi
 
-Käyttöliittymässä on kolme tiedostoa: `public/index.html`, `public/styles.css` ja `public/app.js`. HTML sisältää näkymät, lomakkeet, dialogit ja valikon popoverin. CSS käyttää Grid- ja Flexbox-asettelua. JavaScript arpoo kappaleen, soittaa äänipätkän Web Audio API:lla ja hakee tai tallentaa kappaletiedot `fetch()`-kutsuilla.
+Käyttöliittymässä on kolme tiedostoa: `public/index.html`, `public/styles.css` ja `public/app.js`. HTML sisältää näkymät, lomakkeet, dialogit ja valikon popoverin. CSS käyttää Grid- ja Flexbox-asettelua. JavaScript arpoo kappaleen, soittaa äänipätkän selaimen äänisoittimella, hakee Jamendon metatiedot API:sta ja hakee tai tallentaa omat kappaletiedot `fetch()`-kutsuilla.
 
 | Toiminto | REST-pyyntö |
 | --- | --- |
@@ -40,7 +52,7 @@ Käyttöliittymässä on kolme tiedostoa: `public/index.html`, `public/styles.cs
 
 Katselmoinnissa kuuntele ensimmäinen pätkä, ohita kerran ja kirjoita vastaus. Lisää sitten oma kappale, muokkaa sitä ja poista se. Näytä `db.json`, `app.js`:n `request()`-funktio ja Gitin commit-historia.
 
-GitHubissa on projektin lähdekoodi. Ohjeen mukainen paikallinen JSON Server tarjoaa tallennuksen kappale-editorille. Tämä on paikallisesti käynnistettävä kurssiprojekti; GitHub Pages ei suorita JSON Serveriä.
+GitHubissa on projektin lähdekoodi. Paikallinen JSON Server tallentaa kappale-editorin muutokset `db.json`-tiedostoon. Staattisella GitHub Pages -sivulla esimerkkikappaleiden ja omien muokkausten varatallennus käyttää selaimen localStoragea, koska Pages ei suorita JSON Serveriä.
 
 ## Tarkistettu selaimessa
 

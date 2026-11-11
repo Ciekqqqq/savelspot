@@ -2,7 +2,7 @@
 
 ## Aihe
 
-**Sävelspot – musiikkivisa.** Pelaaja kuuntelee kappaleen alun ja kirjoittaa sen nimen. Väärä arvaus tai ohitus pidentää kuunneltavaa pätkää.
+**Sävelspot – musiikkivisa.** Pelaaja kuuntelee kappaleen alun ja kirjoittaa sen nimen. Väärä arvaus tai ohitus pidentää kuunneltavaa pätkää. Vaihtoehtoisena lähteenä pelissä voi yhdistää laajan, eri tyylilajeja sisältävän Jamendo-indiekatalogin.
 
 ## Kesto
 
@@ -36,11 +36,11 @@ Yksi pelimuoto. Kuunnellaan alku, arvataan kappale ja tarvittaessa avataan pidem
 
 ## Rajaukset
 
-Projektiin kuuluvat peli, kappale-editori ja tulokset. Aloituskatalogissa on kuusi vapaasti jaettavaa äänitettä. Kappaletiedot tallennetaan paikalliseen JSON Serveriin; omat tulokset ja asetukset säilyvät selaimessa. Vaikeustasot määritetään itse editorissa. Projekti ei sisällä suoratoistopalvelun musiikkikirjastoa eikä käyttäjätilejä.
+Projektiin kuuluvat peli, kappale-editori ja tulokset. Mukana tulee kuusi lisensoitua esimerkkikappaletta. Laajempi musiikkikirjasto haetaan Jamendon API:sta erissä; se vaatii henkilökohtaisen Client ID:n, toimii ilman kaupallista hyötyä ja näyttää kappaleen tekijän, sivun ja lisenssin vastauksen yhteydessä. Kappaletiedot tallennetaan paikalliseen JSON Serveriin tai staattisella sivulla selaimeen. Omat tulokset ja asetukset säilyvät selaimessa. Vaikeustasot määritetään itse editorissa.
 
 ## Työkalut
 
-Visual Studio Code, Git ja GitHub, HTML, CSS, JavaScript ja JSON Server. Node.js ja npm käynnistävät valmiin JSON Serverin.
+Visual Studio Code, Git ja GitHub, HTML, CSS, JavaScript, JSON Server ja Jamendo API. Node.js ja npm käynnistävät valmiin JSON Serverin.
 
 ## Riskit ja niiden eliminointi
 
@@ -51,4 +51,5 @@ Visual Studio Code, Git ja GitHub, HTML, CSS, JavaScript ja JSON Server. Node.js
 | Sairastuminen | Kirjataan eteneminen README-tiedostoon ja sovitaan varapäivä. |
 | Parityön vähäinen viestintä ja sooloilu | Sovitaan tapaamiset, yhtenäinen ulkoasu ja Gitin työnkulku. Jaetaan työ tasaisesti ja katselmoidaan molempien muutokset. |
 | Äänipätkä ei lataudu tai kappaleella on monta tunnettua nimeä | Paketoidaan esimerkkiäänitteet mukaan ja tallennetaan yleiset nimivaihtoehdot. |
+| Jamendon Client ID tai API ei ole käytettävissä | Testataan tunniste etukäteen. Paikalliset esimerkkikappaleet toimivat myös ilman API-yhteyttä. |
 | JSON Server ei käynnisty katselmoinnissa | Käynnistetään peli README-ohjeella ennen esitystä ja tarkistetaan, että portti 3000 on vapaa. |
