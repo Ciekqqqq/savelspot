@@ -1,6 +1,6 @@
 # Sävelspot
 
-Arvaa tuttu kappale tekstivihjeestä. Saat oikeasta vastauksesta kaksi pistettä tai yhden pisteen, jos avasit lisävihjeen. Kierroksella arvotaan enintään viisi kysymystä.
+Kuuntele kappaleen alkua ja kirjoita sen nimi. Ensimmäinen pätkä kestää 0,1 sekuntia. Väärä vastaus tai ohitus avaa pidemmän pätkän samasta kappaleesta. Helpossa pelissä pituudet ovat 0,1 s, 0,5 s, 2 s, 8 s ja 15 s. Muut vaikeustasot lyhentävät yritysten määrää.
 
 ## Käynnistä peli
 
@@ -17,23 +17,25 @@ Avaa selaimessa [http://127.0.0.1:3000](http://127.0.0.1:3000). JSON Server tarj
 
 ## Näkymät
 
-- **Pelaa.** Valitse kolmesta kappaleesta. Saat heti tietää, mikä vastaus oli oikein.
-- **Kysymykset.** Katsele, lisää, muokkaa ja poista kysymyksiä. Muutokset tallentuvat tiedostoon `db.json` ja tulevat mukaan seuraavaan kierrokseen.
-- **Tulokset.** Katso viimeisimmän pelatun kierroksen pisteet ja aloita uusi kierros.
+- **Pelaa.** Toista äänipätkä, kirjoita vastaus tai ohita. Valitse halutessasi tyylilaji ja vaikeustaso.
+- **Kappaleet.** Katsele, lisää, muokkaa ja poista pelin kappaleita. Muutokset tallentuvat tiedostoon `db.json`.
+- **Tulokset.** Katso tunnistettujen kappaleiden määrä ja paras putki nykyisellä sivulatauksella.
+
+Kappaleeditorin äänikenttään käy tiedosto kansiosta `public/audio/`, esimerkiksi `audio/fur-elise.mp3`, tai selaimesta haettavissa oleva suora HTTPS-osoite äänitiedostoon. Ulkoisen palvelimen on sallittava haku toiselta sivustolta (CORS). Voit antaa samalle kappaleelle useita hyväksyttäviä nimiä.
 
 ## Toteutus ja katselmointi
 
-Käyttöliittymässä on kolme tiedostoa: `public/index.html`, `public/styles.css` ja `public/app.js`. HTML sisältää näkymät, lomakkeet, dialogit ja pisteohjeen popoverin. CSS käyttää Grid- ja Flexbox-asettelua ja seuraa laitteen vaaleaa tai tummaa teemaa. JavaScript arpoo kierroksen, laskee pisteet ja hakee tai tallentaa kysymykset `fetch()`-kutsuilla.
+Käyttöliittymässä on kolme tiedostoa: `public/index.html`, `public/styles.css` ja `public/app.js`. HTML sisältää näkymät, lomakkeet, dialogit ja valikon popoverin. CSS käyttää Grid- ja Flexbox-asettelua. JavaScript arpoo kappaleen, soittaa äänipätkän Web Audio API:lla ja hakee tai tallentaa kappaletiedot `fetch()`-kutsuilla.
 
 | Toiminto | REST-pyyntö |
 | --- | --- |
-| Lue kysymykset | GET /questions |
-| Lisää kysymys | POST /questions |
-| Muokkaa kysymystä | PATCH /questions/:id |
-| Poista kysymys | DELETE /questions/:id |
+| Lue kappaleet | GET /questions |
+| Lisää kappale | POST /questions |
+| Muokkaa kappaletta | PATCH /questions/:id |
+| Poista kappale | DELETE /questions/:id |
 
-Katselmoinnissa pelaa kierros, avaa lisävihje ja näytä tulos. Lisää sitten oma kysymys, muokkaa sitä ja poista se. Näytä `db.json`, `app.js`:n `request()`-funktio ja Gitin commit-historia. Kokeile myös kapeaa selainikkunaa ja selaimen omaa lomakevalidointia.
+Katselmoinnissa kuuntele ensimmäinen pätkä, ohita kerran ja kirjoita vastaus. Lisää sitten oma kappale, muokkaa sitä ja poista se. Näytä `db.json`, `app.js`:n `request()`-funktio ja Gitin commit-historia.
 
-GitHubissa on projektin lähdekoodi. Ohjeen mukainen paikallinen JSON Server tarjoaa tallennuksen kysymyseditorille.
+GitHubissa on projektin lähdekoodi. Ohjeen mukainen paikallinen JSON Server tarjoaa tallennuksen kappale-editorille.
 
-[Projektisuunnitelma](PROJECT_PLAN.md)
+[Projektisuunnitelma](PROJECT_PLAN.md) · [Äänitteiden lähteet](AUDIO_CREDITS.md) · [Pelimekaniikan esikuva](https://songspot.net/faq)

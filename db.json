@@ -2,57 +2,51 @@
   "questions": [
     {
       "id": 1,
-      "category": "Rock",
-      "clue": "Queenin kappale vaihtaa balladista oopperaan ja sitten raskaaseen rockiin.",
-      "hint": "Kappaleen nimi päättyy sanaan Rhapsody.",
-      "answer": "Bohemian Rhapsody",
-      "wrong1": "Radio Ga Ga",
-      "wrong2": "Don't Stop Me Now"
+      "title": "Für Elise",
+      "artist": "Ludwig van Beethoven",
+      "category": "Klassinen",
+      "aliases": "Fur Elise, Eliselle, Bagatelli a-molli",
+      "audio": "audio/fur-elise.mp3"
     },
     {
       "id": 2,
-      "category": "Elektroninen",
-      "clue": "Tämä Daruden instrumentaali tunnetaan nopeasta syntikkamelodiastaan.",
-      "hint": "Nimi tarkoittaa hiekkamyrskyä.",
-      "answer": "Sandstorm",
-      "wrong1": "Feel the Beat",
-      "wrong2": "Children"
+      "title": "Eine kleine Nachtmusik",
+      "artist": "Wolfgang Amadeus Mozart",
+      "category": "Klassinen",
+      "aliases": "Pieni yösoitto, A Little Night Music, Serenadi nro 13",
+      "audio": "audio/nachtmusik.mp3"
     },
     {
       "id": 3,
-      "category": "Pop",
-      "clue": "The Weeknd ajaa tämän kappaleen videolla öisillä kaduilla punainen takki päällään.",
-      "hint": "Kappaleen nimi viittaa häikäiseviin valoihin.",
-      "answer": "Blinding Lights",
-      "wrong1": "Save Your Tears",
-      "wrong2": "Starboy"
+      "title": "Jingle Bells",
+      "artist": "James Lord Pierpont",
+      "category": "Joulu",
+      "aliases": "Kulkuset, Kilisee kilisee kulkunen",
+      "audio": "audio/jingle-bells.mp3"
     },
     {
       "id": 4,
-      "category": "Rock",
-      "clue": "Nirvanan musiikkivideolla bändi soittaa koulun liikuntasalissa.",
-      "hint": "Kappaleen nimessä on sana Teen.",
-      "answer": "Smells Like Teen Spirit",
-      "wrong1": "Come As You Are",
-      "wrong2": "In Bloom"
+      "title": "Twinkle, Twinkle, Little Star",
+      "artist": "Perinteinen",
+      "category": "Kansanlaulu",
+      "aliases": "Tuiki tuiki tähtönen, Ah vous dirai-je maman, ABC Song",
+      "audio": "audio/twinkle.mp3"
     },
     {
       "id": 5,
-      "category": "Euroviisut",
-      "clue": "Käärijä esiintyi vuoden 2023 Euroviisuissa vihreissä hihoissa.",
-      "hint": "Kappaleen nimessä toistuu sama tavu kolme kertaa.",
-      "answer": "Cha Cha Cha",
-      "wrong1": "Huhhahhei",
-      "wrong2": "Ruoska"
+      "title": "Oodi ilolle",
+      "artist": "Ludwig van Beethoven",
+      "category": "Hymni",
+      "aliases": "Ode to Joy, Ode an die Freude, Euroopan hymni, Anthem of Europe",
+      "audio": "audio/ode-to-joy.mp3"
     },
     {
       "id": 6,
-      "category": "Pop",
-      "clue": "Tämä oli ensimmäinen single Daft Punkin Random Access Memories -albumilta. Laulajana on Pharrell Williams.",
-      "hint": "Kappaleen nimi viittaa onnenpotkuun.",
-      "answer": "Get Lucky",
-      "wrong1": "Lose Yourself to Dance",
-      "wrong2": "Instant Crush"
+      "title": "Frère Jacques",
+      "artist": "Perinteinen",
+      "category": "Kansanlaulu",
+      "aliases": "Jaakko kulta, Brother John, Are You Sleeping",
+      "audio": "audio/frere-jacques.mp3"
     }
   ]
 }

@@ -1,22 +1,31 @@
 const find = (selector) => document.querySelector(selector);
-const answers = find('#answers');
-const hintButton = find('#hint');
-const nextButton = find('#next');
+const clipLengths = [0.1, 0.5, 2, 8, 15];
+const listen = find('#listen');
+const guess = find('#guess');
+const guessButton = find('#guess-button');
 const editor = find('#editor');
 const questionForm = find('#question-form');
 const deleteDialog = find('#delete-dialog');
 const deleteForm = find('#delete-form');
+const feedback = find('#feedback');
 
-let questions = [];
-let round = [];
-let questionIndex = 0;
-let points = 0;
-let correct = 0;
-let answered = false;
-let hintUsed = false;
+let songs = [];
+let song;
+let playedIds = new Set();
+let categories = ['Kaikki tyylilajit'];
+let categoryIndex = 0;
+let clipCount = 5;
+let stage = 0;
+let ended = false;
 let selectedId = null;
+let audioContext;
+let audioSource;
+let volume;
+let playbackRequest = 0;
+const buffers = new Map();
+const stats = { played: 0, solved: 0, streak: 0, best: 0 };
 
-async function request(method = 'GET', id = null, data = null) {
+async function request(method = 'GET', id = null, data) {
   const path = id === null ? '/questions' : '/questions/' + encodeURIComponent(id);
   const options = { method };
   if (data) {
@@ -28,23 +37,16 @@ async function request(method = 'GET', id = null, data = null) {
   return method === 'DELETE' ? null : response.json();
 }
 
-function shuffle(items) {
-  const result = [...items];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
 function showView(name) {
+  if (name !== 'play') stopAudio();
   document.querySelectorAll('main > section').forEach((section) => {
     section.hidden = section.id !== name;
   });
-  document.querySelectorAll('nav button').forEach((button) => {
+  document.querySelectorAll('nav [data-view]').forEach((button) => {
     if (button.dataset.view === name) button.setAttribute('aria-current', 'page');
     else button.removeAttribute('aria-current');
   });
+  find('#menu').hidePopover();
   find('#' + name + '-heading').focus();
 }
 
@@ -54,140 +56,228 @@ function setError(selector, message = '') {
   element.hidden = !message;
 }
 
-function startRound() {
-  round = shuffle(questions).slice(0, 5);
-  questionIndex = 0;
-  points = 0;
-  correct = 0;
-  renderQuestion();
+function setFeedback(message = '', result = '') {
+  feedback.textContent = message;
+  feedback.dataset.result = result;
 }
 
-function renderQuestion() {
-  const question = round[questionIndex];
-  answered = false;
-  hintUsed = false;
-  answers.replaceChildren();
-  find('#feedback').textContent = '';
-  find('#hint-text').hidden = true;
-  nextButton.hidden = true;
-  hintButton.hidden = !question;
-  hintButton.removeAttribute('aria-disabled');
+function seconds(value) {
+  return String(value).replace('.', ',') + ' s';
+}
 
-  if (!question) {
-    find('#progress').textContent = 'Musiikkivisa';
-    find('#clue').textContent = 'Lisää kysymys Kysymykset-näkymässä.';
+function updateListenLabel() {
+  const playing = Boolean(audioSource);
+  listen.classList.toggle('playing', playing);
+  listen.setAttribute('aria-label', playing ? 'Pysäytä' : 'Toista ' + seconds(clipLengths[stage]));
+}
+
+function stopAudio() {
+  playbackRequest++;
+  if (audioSource) {
+    audioSource.stop();
+    audioSource = null;
+  }
+  updateListenLabel();
+}
+
+async function loadBuffer(url) {
+  if (buffers.has(url)) return buffers.get(url);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Äänitiedostoa ei löytynyt');
+  const buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
+  buffers.set(url, buffer);
+  return buffer;
+}
+
+async function playClip() {
+  if (!song) return;
+  const wasPlaying = Boolean(audioSource);
+  stopAudio();
+  if (wasPlaying) return;
+  const ticket = playbackRequest;
+  const audioUrl = song.audio;
+  try {
+    if (!audioContext) {
+      audioContext = new AudioContext();
+      volume = audioContext.createGain();
+      volume.gain.value = Number(find('#volume').value) / 100;
+      volume.connect(audioContext.destination);
+    }
+    await audioContext.resume();
+    const buffer = await loadBuffer(audioUrl);
+    if (ticket !== playbackRequest) return;
+
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(volume);
+    source.onended = () => {
+      if (audioSource !== source) return;
+      audioSource = null;
+      updateListenLabel();
+    };
+    source.start(0, 0, Math.min(clipLengths[stage], buffer.duration));
+    audioSource = source;
+    updateListenLabel();
+  } catch {
+    if (ticket === playbackRequest) setFeedback('Äänitiedostoa ei voitu toistaa. Tarkista kappaleen osoite.', 'wrong');
+  }
+}
+
+function renderStage() {
+  const length = clipLengths[stage];
+  find('#duration').textContent = seconds(length);
+  find('#timeline-label').textContent = seconds(length);
+  find('#timeline-fill').style.width = (length / 15 * 100) + '%';
+  updateListenLabel();
+}
+
+function updateGuessButton() {
+  guessButton.textContent = guess.value.trim() ? 'Arvaa' : '⏭ Ohita';
+}
+
+function startSong() {
+  stopAudio();
+  const pool = categoryIndex === 0 ? songs : songs.filter((entry) => entry.category === categories[categoryIndex]);
+  let choices = pool.filter((entry) => !playedIds.has(entry.id));
+  if (!choices.length) {
+    playedIds.clear();
+    choices = pool.length > 1 ? pool.filter((entry) => entry.id !== song?.id) : pool;
+  }
+  song = choices[Math.floor(Math.random() * choices.length)];
+  if (song) playedIds.add(song.id);
+  stage = 0;
+  ended = false;
+  find('#reveal').hidden = true;
+  guess.value = '';
+  guess.disabled = guessButton.disabled = listen.disabled = !song;
+  updateGuessButton();
+  renderStage();
+  setFeedback(song ? '' : 'Lisää kappale valikon Kappaleet-näkymässä.');
+}
+
+function normalize(text) {
+  return text.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/[^\p{L}\p{N}]/gu, '');
+}
+
+function finishSong(correct) {
+  ended = true;
+  guess.disabled = guessButton.disabled = true;
+  find('#answer-title').textContent = song.title;
+  find('#answer-artist').textContent = song.artist;
+  find('#reveal').hidden = false;
+  setFeedback(correct ? 'Oikein! Tunnistit biisin pätkästä ' + seconds(clipLengths[stage]) + '.' : 'Yritykset loppuivat.', correct ? 'correct' : 'wrong');
+  stats.played++;
+  if (correct) stats.solved++;
+  stats.streak = correct ? stats.streak + 1 : 0;
+  stats.best = Math.max(stats.best, stats.streak);
+  find('#solved').textContent = stats.solved + ' / ' + stats.played;
+  find('#streak').textContent = stats.streak;
+  find('#best').textContent = stats.best;
+  find('#next-song').focus();
+}
+
+find('#guess-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!song || ended) return;
+  stopAudio();
+  const submitted = guess.value.trim();
+  const validTitles = [song.title, ...(song.aliases || '').split(',')].map(normalize).filter(Boolean);
+  if (submitted && validTitles.includes(normalize(submitted))) {
+    finishSong(true);
     return;
   }
-
-  find('#progress').textContent = 'Kysymys ' + (questionIndex + 1) + ' / ' + round.length + ' · ' + question.category;
-  find('#clue').textContent = question.clue;
-  for (const option of shuffle([question.answer, question.wrong1, question.wrong2])) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = option;
-    answers.append(button);
+  if (stage + 1 >= clipCount) {
+    finishSong(false);
+    return;
   }
+  stage++;
+  guess.value = '';
+  updateGuessButton();
+  renderStage();
+  setFeedback((submitted ? 'Ei osunut. ' : '') + 'Nyt voit kuunnella ' + seconds(clipLengths[stage]) + '.');
+  listen.focus();
+});
+
+function changeCategory(direction) {
+  categoryIndex = (categoryIndex + direction + categories.length) % categories.length;
+  find('#category').textContent = categories[categoryIndex];
+  playedIds.clear();
+  startSong();
 }
 
-function renderQuestionList() {
+listen.addEventListener('click', playClip);
+guess.addEventListener('input', updateGuessButton);
+find('#next-song').addEventListener('click', () => {
+  startSong();
+  listen.focus();
+});
+find('#previous-category').addEventListener('click', () => changeCategory(-1));
+find('#next-category').addEventListener('click', () => changeCategory(1));
+find('#volume').addEventListener('input', (event) => {
+  if (volume) volume.gain.value = Number(event.target.value) / 100;
+});
+find('#theme').addEventListener('change', (event) => {
+  document.documentElement.dataset.theme = event.target.value;
+});
+document.querySelectorAll('[data-view]').forEach((button) => {
+  button.addEventListener('click', () => showView(button.dataset.view));
+});
+document.querySelectorAll('#difficulty button').forEach((button) => {
+  button.addEventListener('click', () => {
+    const selected = Number(button.dataset.clips);
+    if (selected === clipCount) return;
+    find('#difficulty [aria-pressed="true"]').setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-pressed', 'true');
+    clipCount = selected;
+    startSong();
+  });
+});
+
+function refreshCatalog() {
+  const oldCategory = categories[categoryIndex];
+  categories = ['Kaikki tyylilajit', ...new Set(songs.map((entry) => entry.category))];
+  categoryIndex = Math.max(0, categories.indexOf(oldCategory));
+  find('#category').textContent = categories[categoryIndex];
+  find('#titles').replaceChildren(...songs.map((entry) => new Option(entry.title)));
   const list = find('#question-list');
   list.replaceChildren();
-  if (!questions.length) {
-    list.textContent = 'Kysymyksiä ei ole vielä.';
-    return;
-  }
-  for (const question of questions) {
+  if (!songs.length) list.textContent = 'Kappaleita ei ole vielä.';
+  for (const entry of songs) {
     const card = document.createElement('article');
-    const heading = document.createElement('h3');
-    const clue = document.createElement('p');
+    const title = document.createElement('h3');
+    const subtitle = document.createElement('p');
+    title.textContent = entry.title;
+    subtitle.textContent = entry.artist + ' · ' + entry.category;
     const actions = document.createElement('div');
-    heading.textContent = question.answer + ' · ' + question.category;
-    clue.textContent = question.clue;
     actions.className = 'actions';
     for (const [label, action] of [['Muokkaa', 'edit'], ['Poista', 'delete']]) {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = label;
       button.dataset.action = action;
-      button.dataset.id = question.id;
-      button.setAttribute('aria-label', label + ' kysymystä: ' + question.answer);
+      button.dataset.id = entry.id;
+      button.setAttribute('aria-label', label + ': ' + entry.title);
       actions.append(button);
     }
-    card.append(heading, clue, actions);
+    card.append(title, subtitle, actions);
     list.append(card);
   }
 }
 
-function openEditor(question = null) {
-  selectedId = question ? question.id : null;
+function openEditor(entry = null) {
+  selectedId = entry?.id ?? null;
   questionForm.reset();
   setError('#save-error');
-  find('#editor-heading').textContent = question ? 'Muokkaa kysymystä' : 'Lisää kysymys';
-  if (question) {
-    for (const field of questionForm.querySelectorAll('input')) {
-      field.value = question[field.name];
-    }
+  find('#editor-heading').textContent = entry ? 'Muokkaa kappaletta' : 'Lisää kappale';
+  if (entry) {
+    for (const field of questionForm.querySelectorAll('input')) field.value = entry[field.name] ?? '';
   }
   editor.showModal();
 }
 
-document.querySelectorAll('nav button').forEach((button) => {
-  button.addEventListener('click', () => showView(button.dataset.view));
-});
-
-hintButton.addEventListener('click', () => {
-  if (hintUsed) return;
-  hintUsed = true;
-  const hint = find('#hint-text');
-  hint.textContent = round[questionIndex].hint;
-  hint.hidden = false;
-  hintButton.setAttribute('aria-disabled', 'true');
-});
-
-answers.addEventListener('click', (event) => {
-  const button = event.target.closest('button');
-  if (!button || answered) return;
-
-  answered = true;
-  const answer = round[questionIndex].answer;
-  const isCorrect = button.textContent === answer;
-  const earned = isCorrect ? (hintUsed ? 1 : 2) : 0;
-  points += earned;
-  if (isCorrect) correct++;
-
-  for (const option of answers.children) {
-    option.setAttribute('aria-disabled', 'true');
-    if (option.textContent === answer) option.classList.add('correct');
-  }
-  if (!isCorrect) button.classList.add('incorrect');
-  find('#feedback').textContent = isCorrect
-    ? 'Oikein! +' + earned + ' p.'
-    : 'Oikea vastaus on ' + answer + '.';
-  hintButton.hidden = true;
-  nextButton.textContent = questionIndex + 1 === round.length ? 'Katso tulos' : 'Seuraava';
-  nextButton.hidden = false;
-});
-
-nextButton.addEventListener('click', () => {
-  if (questionIndex + 1 < round.length) {
-    questionIndex++;
-    renderQuestion();
-    find('#play-heading').focus();
-    return;
-  }
-  find('#result').textContent = 'Oikein ' + correct + ' / ' + round.length +
-    '. Pisteet ' + points + ' / ' + (2 * round.length) + '.';
-  showView('results');
-});
-
-find('#restart').addEventListener('click', () => {
-  startRound();
-  showView('play');
-});
 find('#add').addEventListener('click', () => openEditor());
 find('#cancel-edit').addEventListener('click', () => editor.close());
 find('#cancel-delete').addEventListener('click', () => deleteDialog.close());
-
 for (const dialog of [editor, deleteDialog]) {
   dialog.addEventListener('cancel', (event) => {
     if (dialog.querySelector('button[type="submit"]').disabled) event.preventDefault();
@@ -196,80 +286,85 @@ for (const dialog of [editor, deleteDialog]) {
 
 find('#question-list').addEventListener('click', (event) => {
   const button = event.target.closest('[data-action]');
-  const question = questions.find((item) => String(item.id) === button?.dataset.id);
-  if (!question) return;
+  if (!button) return;
+  const entry = songs.find((item) => String(item.id) === button.dataset.id);
+  if (!entry) return;
   if (button.dataset.action === 'edit') {
-    openEditor(question);
+    openEditor(entry);
     return;
   }
-  selectedId = question.id;
-  find('#delete-label').textContent = question.answer;
+  selectedId = entry.id;
+  find('#delete-label').textContent = entry.title;
   setError('#delete-error');
   deleteDialog.showModal();
 });
+
+function lockForm(form, locked) {
+  for (const button of form.querySelectorAll('button')) button.disabled = locked;
+}
+
+function validAudioPath(value) {
+  if (/^audio\/[\w.-]+\.(mp3|wav|ogg|m4a)$/i.test(value)) return true;
+  try { return new URL(value).protocol === 'https:'; }
+  catch { return false; }
+}
 
 questionForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(questionForm));
   for (const key of Object.keys(data)) data[key] = data[key].trim();
-  const alternatives = [data.answer, data.wrong1, data.wrong2].map((value) => value.toLowerCase());
-  if (new Set(alternatives).size !== 3) {
-    setError('#save-error', 'Anna kolme erilaista vastausvaihtoehtoa.');
+  if (!validAudioPath(data.audio)) {
+    setError('#save-error', 'Anna audio-kansiossa olevan tiedoston polku tai HTTPS-osoite.');
     return;
   }
   const id = selectedId;
-  const submit = event.submitter;
-  submit.disabled = true;
-  find('#cancel-edit').disabled = true;
+  lockForm(questionForm, true);
   setError('#save-error');
   try {
     const saved = await request(id === null ? 'POST' : 'PATCH', id, data);
-    if (id === null) questions.push(saved);
-    else questions = questions.map((question) => question.id === id ? saved : question);
-    renderQuestionList();
-    if (!round.length) startRound();
+    if (id === null) songs.push(saved);
+    else songs = songs.map((entry) => entry.id === id ? saved : entry);
+    refreshCatalog();
+    if (!song || song.id === id) startSong();
     editor.close();
     find('#add').focus();
   } catch {
     setError('#save-error', 'Tallennus epäonnistui. Tarkista, että JSON Server on käynnissä.');
   } finally {
-    submit.disabled = false;
-    find('#cancel-edit').disabled = false;
+    lockForm(questionForm, false);
   }
 });
 
 deleteForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const id = selectedId;
-  const submit = event.submitter;
-  submit.disabled = true;
-  find('#cancel-delete').disabled = true;
+  lockForm(deleteForm, true);
   setError('#delete-error');
   try {
     await request('DELETE', id);
-    questions = questions.filter((question) => question.id !== id);
-    renderQuestionList();
+    songs = songs.filter((entry) => entry.id !== id);
+    refreshCatalog();
+    if (song?.id === id) startSong();
     deleteDialog.close();
     find('#add').focus();
   } catch {
     setError('#delete-error', 'Poisto epäonnistui. Tarkista, että JSON Server on käynnissä.');
   } finally {
-    submit.disabled = false;
-    find('#cancel-delete').disabled = false;
+    lockForm(deleteForm, false);
   }
 });
 
-async function loadQuestions() {
+async function loadSongs() {
   find('#add').disabled = true;
   try {
-    questions = await request();
-    renderQuestionList();
-    startRound();
+    songs = await request();
+    refreshCatalog();
+    startSong();
     find('#add').disabled = false;
   } catch {
-    find('#clue').textContent = 'Kysymyksiä ei saatu ladattua.';
+    setFeedback('Kappaleita ei saatu ladattua.');
     setError('#load-error', 'Käynnistä JSON Server README-ohjeen mukaan ja päivitä sivu.');
   }
 }
 
-loadQuestions();
+loadSongs();
