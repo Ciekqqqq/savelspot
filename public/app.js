@@ -1,5 +1,5 @@
 const find = (selector) => document.querySelector(selector);
-const clipLengths = [0.1, 0.5, 2, 8, 15];
+const allClipLengths = [0.1, 0.5, 2, 8, 15];
 const listen = find('#listen');
 const guess = find('#guess');
 const guessButton = find('#guess-button');
@@ -14,7 +14,8 @@ let song;
 let playedIds = new Set();
 let categories = ['Kaikki tyylilajit'];
 let categoryIndex = 0;
-let clipCount = 5;
+let level = 1;
+let clipLengths = [...allClipLengths];
 let stage = 0;
 let ended = false;
 let selectedId = null;
@@ -23,7 +24,26 @@ let audioSource;
 let volume;
 let playbackRequest = 0;
 const buffers = new Map();
-const stats = { played: 0, solved: 0, streak: 0, best: 0 };
+const stats = readStored('savelspot-stats', { played: 0, solved: 0, streak: 0, best: 0, distribution: [0, 0, 0, 0, 0] });
+const settings = readStored('savelspot-settings', { theme: 'system', volume: 65, easySearch: true, spotlight: true, clips: allClipLengths });
+let roundGuesses = [];
+
+function readStored(key, defaults) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(key));
+    for (const name of Object.keys(defaults)) {
+      if (saved && typeof saved[name] === typeof defaults[name] && Array.isArray(saved[name]) === Array.isArray(defaults[name])) defaults[name] = saved[name];
+    }
+  } catch { /* Tallennuksen puuttuminen ei estä pelaamista. */ }
+  return defaults;
+}
+
+function saveStored(key, data) {
+  try { localStorage.setItem(key, JSON.stringify(data)); }
+  catch { /* Peli toimii myös, jos selain estää tallennuksen. */ }
+}
+
+function currentLength() { return ended ? 15 : clipLengths[stage]; }
 
 async function request(method = 'GET', id = null, data) {
   const path = id === null ? '/questions' : '/questions/' + encodeURIComponent(id);
@@ -68,16 +88,19 @@ function seconds(value) {
 function updateListenLabel() {
   const playing = Boolean(audioSource);
   listen.classList.toggle('playing', playing);
-  listen.setAttribute('aria-label', playing ? 'Pysäytä' : 'Toista ' + seconds(clipLengths[stage]));
+  listen.setAttribute('aria-label', playing ? 'Pysäytä' : 'Toista ' + seconds(currentLength()));
+  find('#play-caption').textContent = playing ? 'SOI NYT' : 'KUUNTELE';
 }
 
 function stopAudio() {
   playbackRequest++;
   if (audioSource) {
     audioSource.stop();
+    audioSource.disconnect();
     audioSource = null;
   }
   updateListenLabel();
+  listen.disabled = !song;
 }
 
 async function loadBuffer(url) {
@@ -96,6 +119,8 @@ async function playClip() {
   if (wasPlaying) return;
   const ticket = playbackRequest;
   const audioUrl = song.audio;
+  listen.disabled = true;
+  find('#play-caption').textContent = 'LADATAAN';
   try {
     if (!audioContext) {
       audioContext = new AudioContext();
@@ -113,31 +138,46 @@ async function playClip() {
     source.onended = () => {
       if (audioSource !== source) return;
       audioSource = null;
+      source.disconnect();
       updateListenLabel();
     };
-    source.start(0, 0, Math.min(clipLengths[stage], buffer.duration));
+    source.start(0, 0, Math.min(currentLength(), buffer.duration));
     audioSource = source;
     updateListenLabel();
   } catch {
     if (ticket === playbackRequest) setFeedback('Äänitiedostoa ei voitu toistaa. Tarkista kappaleen osoite.', 'wrong');
+  } finally {
+    if (ticket === playbackRequest) { listen.disabled = !song; updateListenLabel(); }
   }
 }
 
 function renderStage() {
-  const length = clipLengths[stage];
+  const length = currentLength();
   find('#duration').textContent = seconds(length);
-  find('#timeline-label').textContent = seconds(length);
   find('#timeline-fill').style.width = (length / 15 * 100) + '%';
+  find('#attempt-label').textContent = ended ? 'KIERROS VALMIS' : 'YRITYS ' + (stage + 1) + ' / ' + clipLengths.length;
+  find('#steps').replaceChildren(...allClipLengths.map((value) => {
+    const step = document.createElement('span');
+    step.textContent = seconds(value);
+    step.className = value === length ? 'current' : !clipLengths.includes(value) ? 'inactive' : '';
+    return step;
+  }));
+  find('.game-hint').hidden = ended;
+  find('.game-hint').firstChild.textContent = 'Yksi biisi. ' + clipLengths.length + (clipLengths.length === 1 ? ' mahdollisuus. ' : ' mahdollisuutta. ');
   updateListenLabel();
 }
 
 function updateGuessButton() {
-  guessButton.textContent = guess.value.trim() ? 'Arvaa' : '⏭ Ohita';
+  guessButton.textContent = guess.value.trim() ? 'Arvaa →' : 'Ohita ↠';
+  guessButton.classList.toggle('has-guess', Boolean(guess.value.trim()));
 }
 
 function startSong() {
   stopAudio();
-  const pool = categoryIndex === 0 ? songs : songs.filter((entry) => entry.category === categories[categoryIndex]);
+  const pool = songs.filter((entry) =>
+    (categoryIndex === 0 || entry.category === categories[categoryIndex]) &&
+    (find('#era').value === 'all' || (entry.era || 'classic') === find('#era').value) &&
+    Number(entry.level || 1) === level);
   let choices = pool.filter((entry) => !playedIds.has(entry.id));
   if (!choices.length) {
     playedIds.clear();
@@ -147,12 +187,17 @@ function startSong() {
   if (song) playedIds.add(song.id);
   stage = 0;
   ended = false;
+  roundGuesses = [];
+  find('#guesses').replaceChildren();
   find('#reveal').hidden = true;
+  find('#guess-form').hidden = false;
+  find('#reroll').disabled = !song;
   guess.value = '';
   guess.disabled = guessButton.disabled = listen.disabled = !song;
   updateGuessButton();
   renderStage();
-  setFeedback(song ? '' : 'Lisää kappale valikon Kappaleet-näkymässä.');
+  find('#round-label').textContent = pool.length + ' KAPPALETTA TÄSSÄ VALINNASSA';
+  setFeedback(song ? '' : 'Tällä yhdistelmällä ei ole kappaleita. Vaihda suodattimia tai lisää oma biisi.');
 }
 
 function normalize(text) {
@@ -165,14 +210,16 @@ function finishSong(correct) {
   find('#answer-title').textContent = song.title;
   find('#answer-artist').textContent = song.artist;
   find('#reveal').hidden = false;
+  find('#guess-form').hidden = true;
   setFeedback(correct ? 'Oikein! Tunnistit biisin pätkästä ' + seconds(clipLengths[stage]) + '.' : 'Yritykset loppuivat.', correct ? 'correct' : 'wrong');
   stats.played++;
   if (correct) stats.solved++;
+  if (correct) stats.distribution[allClipLengths.indexOf(clipLengths[stage])]++;
   stats.streak = correct ? stats.streak + 1 : 0;
   stats.best = Math.max(stats.best, stats.streak);
-  find('#solved').textContent = stats.solved + ' / ' + stats.played;
-  find('#streak').textContent = stats.streak;
-  find('#best').textContent = stats.best;
+  saveStored('savelspot-stats', stats);
+  renderStats();
+  renderStage();
   find('#next-song').focus();
 }
 
@@ -182,11 +229,21 @@ find('#guess-form').addEventListener('submit', (event) => {
   stopAudio();
   const submitted = guess.value.trim();
   const validTitles = [song.title, ...(song.aliases || '').split(',')].map(normalize).filter(Boolean);
-  if (submitted && validTitles.includes(normalize(submitted))) {
+  const correct = Boolean(submitted && validTitles.includes(normalize(submitted)));
+  roundGuesses.push(correct ? '🟩' : submitted ? '🟥' : '⬜');
+  const row = document.createElement('li');
+  const text = document.createElement('span');
+  const time = document.createElement('time');
+  row.className = correct ? 'correct' : submitted ? 'wrong' : '';
+  text.textContent = (correct ? '✓ ' : submitted ? '× ' : '↠ ') + (submitted || 'Ohitettu');
+  time.textContent = seconds(clipLengths[stage]);
+  row.append(text, time);
+  find('#guesses').append(row);
+  if (correct) {
     finishSong(true);
     return;
   }
-  if (stage + 1 >= clipCount) {
+  if (stage + 1 >= clipLengths.length) {
     finishSong(false);
     return;
   }
@@ -200,12 +257,18 @@ find('#guess-form').addEventListener('submit', (event) => {
 
 function changeCategory(direction) {
   categoryIndex = (categoryIndex + direction + categories.length) % categories.length;
-  find('#category').textContent = categories[categoryIndex];
+  find('#category').value = categories[categoryIndex];
   playedIds.clear();
   startSong();
 }
 
 listen.addEventListener('click', playClip);
+find('#reroll').addEventListener('click', startSong);
+find('#era').addEventListener('change', startSong);
+find('#category').addEventListener('change', () => {
+  categoryIndex = categories.indexOf(find('#category').value);
+  startSong();
+});
 guess.addEventListener('input', updateGuessButton);
 find('#next-song').addEventListener('click', () => {
   startSong();
@@ -215,20 +278,53 @@ find('#previous-category').addEventListener('click', () => changeCategory(-1));
 find('#next-category').addEventListener('click', () => changeCategory(1));
 find('#volume').addEventListener('input', (event) => {
   if (volume) volume.gain.value = Number(event.target.value) / 100;
+  find('#volume-value').textContent = event.target.value + ' %';
+  settings.volume = Number(event.target.value);
+  saveStored('savelspot-settings', settings);
 });
 find('#theme').addEventListener('change', (event) => {
   document.documentElement.dataset.theme = event.target.value;
+  settings.theme = event.target.value;
+  saveStored('savelspot-settings', settings);
+});
+find('#easy-search').addEventListener('change', (event) => {
+  settings.easySearch = event.target.checked;
+  guess.setAttribute('list', settings.easySearch ? 'titles' : '');
+  saveStored('savelspot-settings', settings);
+});
+find('#spotlight').addEventListener('change', (event) => {
+  settings.spotlight = event.target.checked;
+  document.body.classList.toggle('no-spotlight', !settings.spotlight);
+  saveStored('savelspot-settings', settings);
+});
+find('#clip-options').addEventListener('change', (event) => {
+  const selected = [...find('#clip-options').querySelectorAll(':checked')].map((input) => Number(input.value));
+  if (!selected.length) { event.target.checked = true; return; }
+  clipLengths = settings.clips = selected;
+  saveStored('savelspot-settings', settings);
+  startSong();
+});
+find('#help').addEventListener('click', () => {
+  find('#instructions').open = true;
+  find('#instructions summary').focus();
+  find('#instructions').scrollIntoView({ block: 'start' });
+});
+find('.wordmark').addEventListener('click', (event) => { event.preventDefault(); showView('play'); });
+find('#share').addEventListener('click', async () => {
+  const result = 'Sävelspot ' + roundGuesses.join('') + '\n' + (roundGuesses.includes('🟩') ? 'Tunnistin biisin: ' + seconds(clipLengths[stage]) : 'Tällä kertaa biisi vei voiton!');
+  try { await navigator.clipboard.writeText(result); setFeedback('Tulos kopioitu. Voit liittää sen viestiin.'); }
+  catch { setFeedback('Kopiointi ei onnistunut. Tuloksesi: ' + roundGuesses.join('')); }
 });
 document.querySelectorAll('[data-view]').forEach((button) => {
   button.addEventListener('click', () => showView(button.dataset.view));
 });
 document.querySelectorAll('#difficulty button').forEach((button) => {
   button.addEventListener('click', () => {
-    const selected = Number(button.dataset.clips);
-    if (selected === clipCount) return;
+    const selected = Number(button.dataset.level);
+    if (selected === level) return;
     find('#difficulty [aria-pressed="true"]').setAttribute('aria-pressed', 'false');
     button.setAttribute('aria-pressed', 'true');
-    clipCount = selected;
+    level = selected;
     startSong();
   });
 });
@@ -237,17 +333,25 @@ function refreshCatalog() {
   const oldCategory = categories[categoryIndex];
   categories = ['Kaikki tyylilajit', ...new Set(songs.map((entry) => entry.category))];
   categoryIndex = Math.max(0, categories.indexOf(oldCategory));
-  find('#category').textContent = categories[categoryIndex];
-  find('#titles').replaceChildren(...songs.map((entry) => new Option(entry.title)));
+  find('#category').replaceChildren(...categories.map((name) => new Option(name, name)));
+  find('#category').value = categories[categoryIndex];
+  find('#titles').replaceChildren(...songs.map((entry) => new Option(entry.artist, entry.title)));
+  renderCatalog();
+}
+
+function renderCatalog() {
   const list = find('#question-list');
   list.replaceChildren();
   if (!songs.length) list.textContent = 'Kappaleita ei ole vielä.';
-  for (const entry of songs) {
+  const query = normalize(find('#catalog-search').value);
+  const matches = songs.filter((entry) => normalize(entry.title + entry.artist).includes(query));
+  if (songs.length && !matches.length) list.textContent = 'Ei hakutuloksia.';
+  for (const entry of matches) {
     const card = document.createElement('article');
-    const title = document.createElement('h3');
+    const title = document.createElement('h2');
     const subtitle = document.createElement('p');
     title.textContent = entry.title;
-    subtitle.textContent = entry.artist + ' · ' + entry.category;
+    subtitle.textContent = entry.artist + ' · ' + entry.category + ' · Taso ' + (entry.level || 1);
     const actions = document.createElement('div');
     actions.className = 'actions';
     for (const [label, action] of [['Muokkaa', 'edit'], ['Poista', 'delete']]) {
@@ -259,7 +363,9 @@ function refreshCatalog() {
       button.setAttribute('aria-label', label + ': ' + entry.title);
       actions.append(button);
     }
-    card.append(title, subtitle, actions);
+    const copy = document.createElement('div');
+    copy.append(title, subtitle);
+    card.append(copy, actions);
     list.append(card);
   }
 }
@@ -270,12 +376,13 @@ function openEditor(entry = null) {
   setError('#save-error');
   find('#editor-heading').textContent = entry ? 'Muokkaa kappaletta' : 'Lisää kappale';
   if (entry) {
-    for (const field of questionForm.querySelectorAll('input')) field.value = entry[field.name] ?? '';
+    for (const field of questionForm.querySelectorAll('input, select')) field.value = entry[field.name] ?? (field.name === 'era' ? 'classic' : field.name === 'level' ? '1' : '');
   }
   editor.showModal();
 }
 
 find('#add').addEventListener('click', () => openEditor());
+find('#catalog-search').addEventListener('input', renderCatalog);
 find('#cancel-edit').addEventListener('click', () => editor.close());
 find('#cancel-delete').addEventListener('click', () => deleteDialog.close());
 for (const dialog of [editor, deleteDialog]) {
@@ -313,6 +420,7 @@ questionForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(questionForm));
   for (const key of Object.keys(data)) data[key] = data[key].trim();
+  data.level = Number(data.level);
   if (!validAudioPath(data.audio)) {
     setError('#save-error', 'Anna audio-kansiossa olevan tiedoston polku tai HTTPS-osoite.');
     return;
@@ -325,7 +433,7 @@ questionForm.addEventListener('submit', async (event) => {
     if (id === null) songs.push(saved);
     else songs = songs.map((entry) => entry.id === id ? saved : entry);
     refreshCatalog();
-    if (!song || song.id === id) startSong();
+    startSong();
     editor.close();
     find('#add').focus();
   } catch {
@@ -344,7 +452,7 @@ deleteForm.addEventListener('submit', async (event) => {
     await request('DELETE', id);
     songs = songs.filter((entry) => entry.id !== id);
     refreshCatalog();
-    if (song?.id === id) startSong();
+    startSong();
     deleteDialog.close();
     find('#add').focus();
   } catch {
@@ -367,4 +475,35 @@ async function loadSongs() {
   }
 }
 
+function renderStats() {
+  find('#solved').textContent = stats.solved + ' / ' + stats.played;
+  find('#streak').textContent = stats.streak;
+  find('#best').textContent = stats.best;
+  find('#distribution').replaceChildren(...allClipLengths.map((length, index) => {
+    const row = document.createElement('div');
+    const label = document.createElement('span');
+    const bar = document.createElement('b');
+    label.textContent = seconds(length);
+    bar.textContent = stats.distribution[index];
+    bar.style.width = Math.max(8, stats.distribution[index] / Math.max(1, ...stats.distribution) * 80) + '%';
+    row.append(label, bar);
+    return row;
+  }));
+}
+
+// Käyttäjän valinnat palautetaan, mutta uusi sivulataus aloittaa uuden kierroksen.
+clipLengths = allClipLengths.filter((length) => settings.clips.includes(length));
+if (!clipLengths.length) clipLengths = [...allClipLengths];
+settings.clips = clipLengths;
+document.documentElement.dataset.theme = settings.theme;
+find('#theme').value = settings.theme;
+find('#volume').value = settings.volume;
+find('#volume-value').textContent = settings.volume + ' %';
+find('#easy-search').checked = settings.easySearch;
+guess.setAttribute('list', settings.easySearch ? 'titles' : '');
+find('#spotlight').checked = settings.spotlight;
+document.body.classList.toggle('no-spotlight', !settings.spotlight);
+find('#clip-options').querySelectorAll('input').forEach((input) => { input.checked = clipLengths.includes(Number(input.value)); });
+if (!Array.isArray(stats.distribution) || stats.distribution.length !== 5 || stats.distribution.some((n) => !Number.isFinite(n) || n < 0)) stats.distribution = [0, 0, 0, 0, 0];
+renderStats();
 loadSongs();

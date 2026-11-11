@@ -32,11 +32,11 @@ Molemmat valitsevat esimerkkikappaleita ja katselmoivat toistensa osuudet. Molem
 
 ## Fokus
 
-Yksi pelimuoto. Kuunnellaan alku, arvataan kappale ja tarvittaessa avataan pidempi pätkä.
+Yksi pelimuoto. Kuunnellaan alku, arvataan kappale ja tarvittaessa avataan pidempi pätkä. Songspot toimii pelin rakenteen esikuvana. Oma ulkoasu, viisi pätkän pituutta sekä tyylilaji-, aikakausi- ja vaikeustasovalinnat.
 
 ## Rajaukset
 
-Projektiin kuuluvat peli, kappale-editori ja tulokset. Aloituskatalogi sisältää vapaasti jaettavia äänitteitä. Kappaletiedot tallennetaan paikalliseen JSON Serveriin.
+Projektiin kuuluvat peli, kappale-editori ja tulokset. Aloituskatalogissa on kuusi vapaasti jaettavaa äänitettä. Kappaletiedot tallennetaan paikalliseen JSON Serveriin; omat tulokset ja asetukset säilyvät selaimessa. Vaikeustasot määritetään itse editorissa. Projekti ei sisällä suoratoistopalvelun musiikkikirjastoa eikä käyttäjätilejä.
 
 ## Työkalut
 

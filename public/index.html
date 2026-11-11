@@ -3,126 +3,105 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sävelspot – arvaa biisi</title>
+  <meta name="description" content="Kuinka nopeasti tunnistat biisin? Kuuntele lyhyt pätkä ja kirjoita nimi.">
+  <meta name="theme-color" content="#101019">
+  <title>Sävelspot — kuule, tunnista, toista</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
 <body>
-  <button id="menu-button" class="menu-button" type="button" popovertarget="menu" aria-label="Avaa valikko">☰</button>
-  <aside id="menu" popover aria-label="Valikko">
-    <nav aria-label="Päänavigaatio">
-      <button type="button" data-view="play" aria-current="page">Pelaa</button>
-      <button type="button" data-view="questions">Kappaleet</button>
-      <button type="button" data-view="results">Tulokset</button>
-    </nav>
-    <label>Äänenvoimakkuus <input id="volume" type="range" min="0" max="100" value="65"></label>
-    <label>Teema
-      <select id="theme">
-        <option value="system">Laitteen asetus</option>
-        <option value="dark">Tumma</option>
-        <option value="light">Vaalea</option>
-      </select>
-    </label>
-  </aside>
-  <header>
-    <h1>Sävelspot</h1>
+  <header class="masthead">
+    <button class="icon-button" type="button" popovertarget="menu" aria-label="Avaa valikko"><span class="hamburger" aria-hidden="true"></span></button>
+    <a class="wordmark" href="#" aria-label="Sävelspot — takaisin peliin">sävelspot<span aria-hidden="true">✳</span></a>
+    <button class="icon-button help-button" type="button" aria-label="Peliohje" id="help">?</button>
   </header>
-
+  <aside id="menu" popover aria-label="Valikko ja asetukset">
+    <div class="section-title"><h2>Oma backstage</h2><button type="button" class="icon-button" popovertarget="menu" popovertargetaction="hide" aria-label="Sulje valikko">×</button></div>
+    <nav aria-label="Päänavigaatio">
+      <button type="button" data-view="play" aria-current="page">▷ Pelaa</button>
+      <button type="button" data-view="questions">♫ Kappaleet</button>
+      <button type="button" data-view="results">↗ Tulokset</button>
+    </nav>
+    <div class="setting"><label for="volume">Äänenvoimakkuus</label><output id="volume-value" for="volume">65 %</output><input id="volume" type="range" min="0" max="100" value="65"></div>
+    <fieldset id="clip-options"><legend>Arvaa pätkän jälkeen</legend><div class="clip-options">
+      <label><input type="checkbox" value="0.1" checked>0,1 s</label><label><input type="checkbox" value="0.5" checked>0,5 s</label><label><input type="checkbox" value="2" checked>2 s</label><label><input type="checkbox" value="8" checked>8 s</label><label><input type="checkbox" value="15" checked>15 s</label>
+    </div></fieldset>
+    <label class="switch-row">Näytä nimiehdotukset <input id="easy-search" type="checkbox" checked></label>
+    <label class="switch-row">Näytä kohdevalo <input id="spotlight" type="checkbox" checked></label>
+    <label>Teema<select id="theme"><option value="system">Laitteen asetus</option><option value="dark">Tumma</option><option value="light">Vaalea</option></select></label>
+    <p class="muted small">Asetukset ja tulokset säilyvät tässä selaimessa.</p>
+  </aside>
   <main>
     <p id="load-error" class="error" role="alert" hidden></p>
     <section id="play" aria-labelledby="play-heading">
-      <h2 id="play-heading" class="sr-only" tabindex="-1">Arvaa biisi</h2>
-      <div class="category-wheel" role="group" aria-label="Tyylilaji">
-        <button id="previous-category" type="button" aria-label="Edellinen tyylilaji">‹</button>
-        <output id="category">Kaikki tyylilajit</output>
-        <button id="next-category" type="button" aria-label="Seuraava tyylilaji">›</button>
+      <h1 id="play-heading" class="tagline" tabindex="-1">Kuule. Tunnista. <span>Toista.</span></h1>
+      <div class="filter-row">
+        <div class="category-wheel" role="group" aria-label="Tyylilaji">
+          <button id="previous-category" type="button" aria-label="Edellinen tyylilaji">‹</button>
+          <select id="category" aria-label="Tyylilaji"><option>Kaikki tyylilajit</option></select>
+          <button id="next-category" type="button" aria-label="Seuraava tyylilaji">›</button>
+        </div>
+        <label class="era-label"><span class="sr-only">Aikakausi</span><select id="era"><option value="all">Kaikki aikakaudet</option><option value="classic">Ennen 2000</option><option value="2000">2000-luku</option><option value="2010">2010-luku</option><option value="2020">2020-luku</option></select></label>
       </div>
       <div id="difficulty" class="difficulty" role="group" aria-label="Vaikeustaso">
-        <button type="button" data-clips="5" aria-pressed="true">Helppo</button>
-        <button type="button" data-clips="4" aria-pressed="false">Keski</button>
-        <button type="button" data-clips="3" aria-pressed="false">Vaikea</button>
-        <button type="button" data-clips="2" aria-pressed="false">Ekspertti</button>
-        <button type="button" data-clips="1" aria-pressed="false">Ääripää</button>
+        <button type="button" data-level="1" aria-pressed="true">Helppo</button><button type="button" data-level="2" aria-pressed="false">Keski</button><button type="button" data-level="3" aria-pressed="false">Vaikea</button><button type="button" data-level="4" aria-pressed="false">Ekspertti</button><button type="button" data-level="5" aria-pressed="false">Mahdoton</button>
       </div>
-
-      <div class="timeline" aria-hidden="true">
-        <div id="timeline-fill"></div>
-        <i style="--position:3.333%"></i><i style="--position:13.333%"></i><i style="--position:53.333%"></i>
-      </div>
-      <span id="timeline-label" class="timeline-label" aria-hidden="true">0,1 s</span>
-
+      <div class="round-meta"><span id="round-label">TUNNISTA KAPPALE</span><span id="attempt-label">YRITYS 1 / 5</span></div>
+      <div class="timeline" aria-hidden="true"><div id="timeline-fill"></div><i style="--position:3.333%"></i><i style="--position:13.333%"></i><i style="--position:53.333%"></i></div>
+      <div id="steps" class="steps" aria-label="Äänipätkien pituudet"></div>
       <div class="player">
-        <button id="listen" class="listen" type="button" aria-label="Toista 0,1 sekuntia" disabled><span aria-hidden="true"></span></button>
-        <span id="duration" class="duration" aria-hidden="true">0,1 s</span>
+        <div class="record" aria-hidden="true"></div>
+        <button id="listen" class="listen" type="button" aria-label="Toista 0,1 s" disabled><span aria-hidden="true"></span></button>
+        <div class="duration-badge"><strong id="duration">0,1 s</strong><span id="play-caption">KUUNTELE</span></div>
       </div>
       <form id="guess-form" class="guess-form">
-        <label class="guess-field">
-          <span class="search-icon" aria-hidden="true"></span>
-          <span class="sr-only">Kappaleen nimi</span>
-          <input id="guess" name="guess" list="titles" maxlength="100" placeholder="Kirjoita biisin nimi" autocomplete="off" disabled>
-        </label>
-        <datalist id="titles"></datalist>
-        <button id="guess-button" type="submit" disabled>⏭ Ohita</button>
+        <label class="guess-field"><span class="search-icon" aria-hidden="true"></span><span class="sr-only">Kappaleen nimi</span><input id="guess" name="guess" list="titles" maxlength="100" placeholder="Mikä biisi soi?" autocomplete="off" disabled></label>
+        <datalist id="titles"></datalist><button id="guess-button" type="submit" disabled>Ohita ↠</button>
       </form>
       <p id="feedback" role="status" aria-live="polite">Ladataan kappaleita…</p>
+      <ol id="guesses" class="guesses" aria-label="Aiemmat arvaukset"></ol>
       <div id="reveal" class="reveal" hidden>
-        <p><strong id="answer-title"></strong><br><span id="answer-artist"></span></p>
-        <button id="next-song" class="primary" type="button">Uusi biisi</button>
+        <div class="answer-art" aria-hidden="true">♫</div><div class="answer-copy"><span class="eyebrow">SE OLI</span><h2 id="answer-title"></h2><p id="answer-artist"></p></div>
+        <div class="reveal-actions"><button id="next-song" class="primary" type="button">Seuraava biisi →</button><button id="share" type="button">Kopioi tulos</button></div>
       </div>
+      <p class="game-hint">Yksi biisi. Viisi mahdollisuutta. <span>Tunnistatko jo ensimmäisestä?</span></p>
+      <button id="reroll" class="text-button" type="button">↻ Vaihda kappale</button>
     </section>
-
     <section id="questions" class="panel" aria-labelledby="questions-heading" hidden>
-      <div class="section-title">
-        <h2 id="questions-heading" tabindex="-1">Kappaleet</h2>
-        <button id="add" class="primary" type="button">Lisää kappale</button>
-      </div>
+      <span class="eyebrow">OMA KOKOELMA</span><div class="section-title"><h1 id="questions-heading" tabindex="-1">Kappaleet</h1><button id="add" class="primary" type="button">+ Lisää</button></div>
+      <p class="muted">Rakenna oma visasi. Lisää äänipätkä ja sen oikea vastaus.</p>
+      <label class="sr-only" for="catalog-search">Hae kokoelmasta</label><input id="catalog-search" type="search" placeholder="Hae kappaletta tai artistia…" autocomplete="off">
       <div id="question-list"></div>
     </section>
-
     <section id="results" class="panel" aria-labelledby="results-heading" hidden>
-      <h2 id="results-heading" tabindex="-1">Tulokset</h2>
-      <dl class="stats">
-        <div><dt>Tunnistettu</dt><dd id="solved">0 / 0</dd></div>
-        <div><dt>Putki</dt><dd id="streak">0</dd></div>
-        <div><dt>Paras putki</dt><dd id="best">0</dd></div>
-      </dl>
-      <button class="primary" type="button" data-view="play">Jatka peliä</button>
+      <span class="eyebrow">OMA ENNÄTYS</span><h1 id="results-heading" tabindex="-1">Hyvä korva?</h1><p class="muted">Jokainen tunnistettu biisi lasketaan.</p>
+      <dl class="stats"><div><dt>Tunnistettu</dt><dd id="solved">0 / 0</dd></div><div><dt>Putki nyt</dt><dd id="streak">0</dd></div><div><dt>Paras putki</dt><dd id="best">0</dd></div></dl>
+      <h2 class="small">Onnistumiset pätkän pituuden mukaan</h2><div id="distribution" class="distribution"></div>
+      <button class="primary" type="button" data-view="play">Vielä yksi biisi →</button>
     </section>
   </main>
-
+  <nav class="view-cards" aria-label="Tutustu peliin">
+    <button data-view="play" aria-current="page" type="button"><span class="card-icon">▷</span><strong>Pikavisa</strong><span>Löydä biisi 0,1 sekunnista</span></button>
+    <button data-view="questions" type="button"><span class="card-icon">♫</span><strong>Omat biisit</strong><span>Tee visasta omannäköinen</span></button>
+    <button data-view="results" type="button"><span class="card-icon">↗</span><strong>Oma putki</strong><span>Kuinka pitkälle pääset?</span></button>
+  </nav>
   <footer>
-    <details>
-      <summary>Peliohje</summary>
-      <p>Kuuntele pätkä ja kirjoita kappaleen nimi. Ohitus tai väärä vastaus avaa pidemmän pätkän. Helpossa pelissä pituudet ovat 0,1 s, 0,5 s, 2 s, 8 s ja 15 s. Vaikeammilla tasoilla yrityksiä on vähemmän.</p>
-    </details>
+    <span class="footer-label">PIENI PÄTKÄ. ISO OIVALLUS.</span>
+    <details id="instructions"><summary>Näin pelaat</summary><div class="instructions-grid"><article><span>01</span><h2>Kuuntele</h2><p>Paina toistoa. Aloitat 0,1 sekunnista ja voit kuunnella saman pätkän uudelleen.</p></article><article><span>02</span><h2>Tunnista</h2><p>Kirjoita kappaleen nimi ja paina Arvaa. Myös kokoelmaan lisätyt nimivaihtoehdot hyväksytään.</p></article><article><span>03</span><h2>Kokeile uudelleen</h2><p>Väärä vastaus tai ohitus avaa 0,5, 2, 8 ja lopuksi 15 sekuntia. Paljastuksen jälkeen voit soittaa 15 sekuntia.</p></article></div><p>Tyylilaji, aikakausi ja vaikeustaso valitsevat kappalejoukon. Vaikeustaso on kokoelman tekijän arvio (1–5). Valikosta voit valita pätkien pituudet ja poistaa nimiehdotukset.</p><p>Mukana on kuusi esimerkkikappaletta. Lisää uusia Omat biisit -näkymässä.</p></details>
+    <p class="credits">Sävelspot <span>·</span> musiikkia muistista <span>·</span> <a href="https://github.com/Ciekqqqq/savelspot" target="_blank" rel="noreferrer">GitHub ↗</a></p>
   </footer>
-
-  <dialog id="editor" aria-labelledby="editor-heading">
-    <form id="question-form">
-      <h2 id="editor-heading">Lisää kappale</h2>
-      <label>Kappaleen nimi <input name="title" required maxlength="100" pattern=".*\S.*" autocomplete="off"></label>
-      <label>Artisti tai säveltäjä <input name="artist" required maxlength="80" pattern=".*\S.*" autocomplete="off"></label>
-      <label>Tyylilaji <input name="category" list="categories" required maxlength="30" pattern=".*\S.*" autocomplete="off"></label>
-      <datalist id="categories"><option value="Klassinen"></option><option value="Kansanlaulu"></option><option value="Joulu"></option><option value="Hymni"></option></datalist>
-      <label>Vaihtoehtoiset nimet, pilkuilla erotettuna <input name="aliases" maxlength="220" autocomplete="off"></label>
-      <label>Äänitiedoston polku tai HTTPS-osoite <input name="audio" required maxlength="350" placeholder="audio/fur-elise.mp3" autocomplete="off"></label>
-      <p id="save-error" class="error" role="alert" hidden></p>
-      <div class="actions">
-        <button class="primary" type="submit">Tallenna</button>
-        <button id="cancel-edit" type="button">Peruuta</button>
-      </div>
-    </form>
-  </dialog>
-  <dialog id="delete-dialog" aria-labelledby="delete-heading">
-    <form id="delete-form">
-      <h2 id="delete-heading">Poista kappale?</h2>
-      <p id="delete-label"></p>
-      <p id="delete-error" class="error" role="alert" hidden></p>
-      <div class="actions">
-        <button id="cancel-delete" type="button" autofocus>Peruuta</button>
-        <button class="danger" type="submit">Poista</button>
-      </div>
-    </form>
-  </dialog>
+  <dialog id="editor" aria-labelledby="editor-heading"><form id="question-form">
+    <span class="eyebrow">OMA KOKOELMA</span><h2 id="editor-heading">Lisää kappale</h2>
+    <label>Kappaleen nimi<input name="title" required maxlength="100" pattern=".*\S.*" autocomplete="off"></label>
+    <label>Artisti tai säveltäjä<input name="artist" required maxlength="80" pattern=".*\S.*" autocomplete="off"></label>
+    <div class="form-row"><label>Tyylilaji<input name="category" list="categories" required maxlength="30" pattern=".*\S.*" autocomplete="off"></label><label>Aikakausi<select name="era"><option value="classic">Ennen 2000</option><option value="2000">2000-luku</option><option value="2010">2010-luku</option><option value="2020">2020-luku</option></select></label></div>
+    <datalist id="categories"><option value="Klassinen"></option><option value="Kansanlaulu"></option><option value="Joulu"></option><option value="Hymni"></option><option value="Pop"></option><option value="Rock"></option><option value="Hip-Hop"></option></datalist>
+    <label>Vaikeustaso<select name="level"><option value="1">1 — Helppo</option><option value="2">2 — Keski</option><option value="3">3 — Vaikea</option><option value="4">4 — Ekspertti</option><option value="5">5 — Mahdoton</option></select></label>
+    <label>Vaihtoehtoiset nimet, pilkuilla erotettuna<input name="aliases" maxlength="220" autocomplete="off"></label>
+    <label>Äänitiedoston polku tai HTTPS-osoite<input name="audio" required maxlength="350" placeholder="audio/fur-elise.mp3" autocomplete="off" aria-describedby="audio-hint"></label><p id="audio-hint" class="muted small">Käytä omaa tai luvallista äänitiedostoa. Ulkoisen osoitteen tulee sallia toisto selaimessa.</p>
+    <p id="save-error" class="error" role="alert" hidden></p><div class="actions"><button class="primary" type="submit">Tallenna</button><button id="cancel-edit" type="button">Peruuta</button></div>
+  </form></dialog>
+  <dialog id="delete-dialog" aria-labelledby="delete-heading"><form id="delete-form"><h2 id="delete-heading">Poista kappale?</h2><p id="delete-label"></p><p id="delete-error" class="error" role="alert" hidden></p><div class="actions"><button id="cancel-delete" type="button" autofocus>Peruuta</button><button class="danger" type="submit">Poista</button></div></form></dialog>
 </body>
 </html>

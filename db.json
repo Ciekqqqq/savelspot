@@ -6,7 +6,9 @@
       "artist": "Ludwig van Beethoven",
       "category": "Klassinen",
       "aliases": "Fur Elise, Eliselle, Bagatelli a-molli",
-      "audio": "audio/fur-elise.mp3"
+      "audio": "audio/fur-elise.mp3",
+      "era": "classic",
+      "level": 2
     },
     {
       "id": 2,
@@ -14,7 +16,9 @@
       "artist": "Wolfgang Amadeus Mozart",
       "category": "Klassinen",
       "aliases": "Pieni yösoitto, A Little Night Music, Serenadi nro 13",
-      "audio": "audio/nachtmusik.mp3"
+      "audio": "audio/nachtmusik.mp3",
+      "era": "classic",
+      "level": 4
     },
     {
       "id": 3,
@@ -22,7 +26,9 @@
       "artist": "James Lord Pierpont",
       "category": "Joulu",
       "aliases": "Kulkuset, Kilisee kilisee kulkunen",
-      "audio": "audio/jingle-bells.mp3"
+      "audio": "audio/jingle-bells.mp3",
+      "era": "classic",
+      "level": 1
     },
     {
       "id": 4,
@@ -30,7 +36,9 @@
       "artist": "Perinteinen",
       "category": "Kansanlaulu",
       "aliases": "Tuiki tuiki tähtönen, Ah vous dirai-je maman, ABC Song",
-      "audio": "audio/twinkle.mp3"
+      "audio": "audio/twinkle.mp3",
+      "era": "classic",
+      "level": 1
     },
     {
       "id": 5,
@@ -38,7 +46,9 @@
       "artist": "Ludwig van Beethoven",
       "category": "Hymni",
       "aliases": "Ode to Joy, Ode an die Freude, Euroopan hymni, Anthem of Europe",
-      "audio": "audio/ode-to-joy.mp3"
+      "audio": "audio/ode-to-joy.mp3",
+      "era": "classic",
+      "level": 3
     },
     {
       "id": 6,
@@ -46,7 +56,9 @@
       "artist": "Perinteinen",
       "category": "Kansanlaulu",
       "aliases": "Jaakko kulta, Brother John, Are You Sleeping",
-      "audio": "audio/frere-jacques.mp3"
+      "audio": "audio/frere-jacques.mp3",
+      "era": "classic",
+      "level": 5
     }
   ]
 }
